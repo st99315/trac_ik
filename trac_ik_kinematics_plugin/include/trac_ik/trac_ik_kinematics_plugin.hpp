@@ -51,6 +51,7 @@ class TRAC_IKKinematicsPlugin : public kinematics::KinematicsBase
   KDL::JntArray joint_min, joint_max;
 
   std::string solve_type;
+  std::string free_angle;
 
 public:
   const std::vector<std::string>& getJointNames() const

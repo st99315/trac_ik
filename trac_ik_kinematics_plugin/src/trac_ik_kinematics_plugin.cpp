@@ -143,9 +143,14 @@ bool TRAC_IKKinematicsPlugin::initialize(const std::string &robot_description,
 
   ROS_INFO_NAMED("trac-ik plugin", "Looking in common namespaces for param name: %s", (group_name + "/position_only_ik").c_str());
   lookupParam(group_name + "/position_only_ik", position_ik_, false);
+
   ROS_INFO_NAMED("trac-ik plugin", "Looking in common namespaces for param name: %s", (group_name + "/solve_type").c_str());
   lookupParam(group_name + "/solve_type", solve_type, std::string("Speed"));
   ROS_INFO_NAMED("trac_ik plugin", "Using solve type %s", solve_type.c_str());
+
+  ROS_INFO_NAMED("trac-ik plugin", "Looking in common namespaces for param name: %s", (group_name + "/free_angle").c_str());
+  lookupParam(group_name + "/free_angle", free_angle, std::string(""));
+  ROS_INFO_NAMED("trac_ik plugin", "Using free angle %s", free_angle.c_str());
 
   active_ = true;
   return true;
@@ -345,11 +350,34 @@ bool TRAC_IKKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pos
 
   KDL::Twist bounds = KDL::Twist::Zero();
 
+  if (options.return_approximate_solution)
+  {
+    // 5mm for translation
+    bounds.vel.x(5e-3);
+    bounds.vel.y(5e-3);
+    bounds.vel.z(5e-3);
+
+    // ~0.5 Degree for rotation
+    bounds.rot.x(1e-2);
+    bounds.rot.y(1e-2);
+    bounds.rot.z(1e-2);
+  }
+  
   if (position_ik_)
   {
     bounds.rot.x(std::numeric_limits<float>::max());
     bounds.rot.y(std::numeric_limits<float>::max());
     bounds.rot.z(std::numeric_limits<float>::max());
+  }
+
+  if (!free_angle.empty())
+  {
+    if (free_angle.find("X") != std::string::npos)
+      bounds.rot.x(FLT_MAX);
+    if (free_angle.find("Y") != std::string::npos)
+      bounds.rot.y(FLT_MAX);
+    if (free_angle.find("Z") != std::string::npos)
+      bounds.rot.z(FLT_MAX);
   }
 
   double epsilon = 1e-5;  //Same as MoveIt's KDL plugin

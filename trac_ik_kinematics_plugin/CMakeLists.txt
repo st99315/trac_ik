@@ -5,6 +5,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
     set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 endif()
 
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  message("${PROJECT_NAME}: Choosing 'Release' for maximum performance")
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 find_package(catkin REQUIRED
   COMPONENTS
     moveit_core
